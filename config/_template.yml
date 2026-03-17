@@ -1,0 +1,70 @@
+# ジャンルテンプレート設定
+# 新ジャンル追加時にコピーして active.yml として使用
+genre: "YOUR_GENRE_SLUG"
+display_name: "YOUR_DISPLAY_NAME"
+persona: "ペルソナの説明をここに記載"
+threads:
+  handle: "@YOUR_HANDLE"
+  posts_per_day: 2
+  morning_time: "07:00"
+  evening_time: "20:00"
+  topic_tags:
+    - "タグ1"
+    - "タグ2"
+    - "タグ3"
+phases:
+  growth:
+    range: "0-3000"
+    posts_per_day: 2
+    content_mix:
+      goods_recipe: 4
+      goods_review: 3
+      quick_recipe: 2
+      failure_story: 2
+      poll: 1
+      note_cta: 2
+  establish:
+    range: "3000-10000"
+    posts_per_day: 2
+    content_mix:
+      goods_recipe: 3
+      goods_review: 2
+      quick_recipe: 3
+      failure_story: 1
+      poll: 1
+      note_cta: 4
+  authority:
+    range: "10000+"
+    posts_per_day: 1
+    content_mix:
+      goods_recipe: 2
+      goods_review: 1
+      quick_recipe: 2
+      failure_story: 1
+      poll: 1
+      note_cta: 7
+current_phase: "growth"
+sheets:
+  spreadsheet_id: "YOUR_SPREADSHEET_ID"
+  queue_sheet: "投稿キュー"
+  neta_sheet: "ネタストック"
+  log_sheet: "投稿ログ"
+  insight_sheet: "インサイト"
+  note_sheet: "note実績"
+note:
+  articles_per_month: 2
+  free_articles_per_month: 4
+  price_range_min: 490
+  price_range_max: 980
+  free_preview_ratio: 0.3
+  themes:
+    - "テーマ1"
+    - "テーマ2"
+cross_genre:
+  primary: "YOUR_PRIMARY"
+  secondary: ""
+  cross_theme: ""
+secrets_prefix: "YOUR_PREFIX"
+ai_disclosure: false
+profile:
+  bio: "プロフィール文をここに記載"

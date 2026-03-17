@@ -39,3 +39,27 @@
 - 決定: threads_api.py(API通信), sheets.py(データ操作), post.py(オーケストレーション)の3ファイル分離
 - 設計方針: クラスベース、DI可能、リトライ3回指数バックオフ、250行制限
 - スコア: 37/40 (92.5%) → 着手許可
+
+---
+
+### D-005: 残りファイル一括作成（2026-03-17）
+
+| 項目 | 内容 |
+|---|---|
+| 日付 | 2026-03-17 |
+| スコア | 36/40 → 承認 |
+| 背景 | 設計書で定義された全ファイルとの差分を解消する |
+| 作成物 | src/utils.py, src/insights.py, src/token_check.py, weekly-insights.yml, monthly-token-check.yml, config/_template.yml, prompts/_template/×3, README.md更新 |
+| 方針 | 既存 post.py は変更せず、新規ファイルのみ utils.py を使用。次回リファクタ時に post.py も移行 |
+
+---
+
+### D-005: 残りファイル一括作成（2026-03-17）
+
+| 項目 | 内容 |
+|---|---|
+| 日付 | 2026-03-17 |
+| スコア | 36/40 → 承認 |
+| 背景 | 設計書で定義された全ファイルとの差分を解消 |
+| 作成物 | utils.py, insights.py, token_check.py, workflows x2, _template.yml, prompts/_template x3, README |
+| 方針 | 既存post.pyは変更せず新規ファイルのみutils.py使用 |

@@ -1,12 +1,12 @@
-name: Evening Post (JST 20:00)
+name: Monthly Token Check (1st JST 9:00)
 on:
   schedule:
-    - cron: '0 11 * * *'
+    - cron: '0 0 1 * *'
   workflow_dispatch:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 jobs:
-  post:
+  token-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,15 +18,9 @@ jobs:
           path: ~/.cache/pip
           key: pip-${{ hashFiles('requirements.txt') }}
       - run: pip install -r requirements.txt
-      - name: Post to Threads
+      - name: Check Token Validity
         working-directory: src
-        run: python post.py post-evening
+        run: python token_check.py
         env:
           KURASHI_ACCESS_TOKEN: ${{ secrets.KURASHI_ACCESS_TOKEN }}
           KURASHI_USER_ID: ${{ secrets.KURASHI_USER_ID }}
-          GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
-      - name: Show queue status
-        working-directory: src
-        run: python post.py status
-        env:
-          GOOGLE_SHEETS_CREDENTIALS: ${{ secrets.GOOGLE_SHEETS_CREDENTIALS }}
