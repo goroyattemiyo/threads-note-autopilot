@@ -220,3 +220,4 @@ config/active.yml
 data/*.csv
 data/*.json
 *.log
+drafts/html/*.html
