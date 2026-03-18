@@ -221,3 +221,4 @@ data/*.csv
 data/*.json
 *.log
 drafts/html/*.html
+drafts/html/*.html
