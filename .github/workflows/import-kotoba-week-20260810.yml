@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 env:
@@ -33,3 +33,12 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Import posts and ideas
         run: python scripts/import_kotoba_week_20260810.py
+      - name: Record successful import
+        run: |
+          mkdir -p data
+          printf 'success\nspreadsheet_id=1vmzjImuoZfm81JQClAMAmsqsaDPx7YuUAhZofrXQRWE\nqueue=14\nstock=14\n' > data/import-kotoba-week-20260810.status
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/import-kotoba-week-20260810.status
+          git commit -m 'chore: confirm kotoba week sheet import [skip ci]'
+          git push
