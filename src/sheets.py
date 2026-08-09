@@ -1,6 +1,7 @@
 """Google Sheets 操作モジュール"""
 import json
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import gspread
 from google.oauth2.service_account import Credentials
@@ -10,6 +11,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive",
 ]
+JST = ZoneInfo("Asia/Tokyo")
 
 
 class SheetManager:
@@ -25,8 +27,13 @@ class SheetManager:
         """シートを取得"""
         return self.spreadsheet.worksheet(sheet_name)
 
+    @staticmethod
+    def _normalize_date(value: str) -> str:
+        """Sheets 上の日付表記を YYYY/MM/DD に寄せる。"""
+        return str(value).strip().replace("-", "/")
+
     def get_next_post(self, queue_sheet: str, time_slot: str) -> dict | None:
-        """投稿キューから次の未投稿を取得
+        """投稿キューからJST基準で次の未投稿を取得する。
 
         Args:
             queue_sheet: シート名
@@ -38,12 +45,12 @@ class SheetManager:
         """
         ws = self._get_worksheet(queue_sheet)
         records = ws.get_all_records()
-        today = datetime.now().strftime("%Y/%m/%d")
+        today = datetime.now(JST).strftime("%Y/%m/%d")
 
         for i, row in enumerate(records):
-            row_date = str(row.get("投稿日", ""))
-            row_slot = str(row.get("時間帯", ""))
-            row_posted = str(row.get("投稿済", ""))
+            row_date = self._normalize_date(row.get("投稿日", ""))
+            row_slot = str(row.get("時間帯", "")).strip()
+            row_posted = str(row.get("投稿済", "")).strip()
             row_text = str(row.get("投稿文", ""))
 
             if (
@@ -76,9 +83,9 @@ class SheetManager:
 
     def log_post(self, log_sheet: str, post_id: str, text: str,
                  post_type: str, status: str):
-        """投稿ログに記録"""
+        """投稿ログにJSTで記録"""
         ws = self._get_worksheet(log_sheet)
-        now = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+        now = datetime.now(JST).strftime("%Y/%m/%d %H:%M:%S")
         ws.append_row([now, post_id, text[:50], post_type, status])
 
     def get_queue_status(self, queue_sheet: str) -> dict:
