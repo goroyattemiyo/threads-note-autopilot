@@ -1,54 +1,90 @@
-# Threads x note 自動運用システム
+# ことばの距離 - Threads 運用基盤
 
-**おつまみごろー**（@otsumamigoro）の Threads 自動投稿 x note 収益化システム
+**goro｜ことばの距離**（@goro_kotobanokyori）の Threads 投稿・検証システムです。
 
-## 概要
+## 目的
 
-キッチン便利グッズ x パパッと一品をテーマに、Threads への自動投稿と note 記事による収益化を行うシステムです。GitHub Actions + Google Sheets + Threads API で運用し、月間作業時間90分以内を目指します。
+日常の小さなイライラ、不安、言い訳、他責、攻撃的な言葉に対して、無理にポジティブへ飛ばず、まず言葉と視点の距離を取り直す発信を続けます。
 
-## アーキテクチャ
+基本方針は **ネガティブ → フラット → できれば少しポジティブ**。フラットで止めてもよいことを前提にします。
 
-手動（週1回）: リサーチ → Claude → Google Sheets 投稿キュー
-自動（毎日2回）: GitHub Actions (cron) → src/post.py → Threads API → Sheets 投稿ログ更新
+## 現在のフェーズ
 
-## ディレクトリ構成
+Phase 1: Threads 投稿基盤の転生・最小運用
 
-.github/workflows/ - GitHub Actions ワークフロー
-config/ - ジャンル設定（active.yml）
-docs/ - 設計書・開発ルール・決定ログ
-prompts/ - プロンプトテンプレート
-src/ - Python スクリプト
-data/ - バックアップデータ（git-ignored）
+- 朝 7:00 JST / 夜 20:00 JST の投稿枠
+- Google Sheets の投稿キューから投稿
+- 投稿結果とインサイトを記録
+- 投稿文は人間が確認してからキューへ入れる
+- note の自動生成・販売導線は当面停止
 
-## 主要ファイル
+## 認証
 
-src/post.py - 投稿メインスクリプト
-src/threads_api.py - Threads API ラッパー
-src/sheets.py - Google Sheets 操作
-src/insights.py - 週次インサイト収集
-src/token_check.py - 月次トークン有効性チェック
-src/utils.py - 共通ユーティリティ
+Threads API は GitHub Secrets の長期アクセストークンを使用します。
 
-## ワークフロー
+Google Sheets はサービスアカウントJSONキーを使わず、GitHub Actions の OIDC と Google Cloud Workload Identity Federation を利用します。`google-github-actions/auth@v3` が Application Default Credentials (ADC) を生成し、Python側は `google.auth.default()` から認証情報を取得します。
 
-post-morning.yml - 毎日 7:00 JST 朝の投稿
-post-evening.yml - 毎日 20:00 JST 夜の投稿
-weekly-insights.yml - 毎週月曜 9:00 JST インサイト収集
-monthly-token-check.yml - 毎月1日 9:00 JST トークンチェック
+## Google Sheets
 
-## セットアップ
+### 投稿キュー
 
-1. GitHub Secrets に登録: KURASHI_ACCESS_TOKEN, KURASHI_USER_ID, GOOGLE_SHEETS_CREDENTIALS
-2. Google Sheets にサービスアカウントを編集者として共有
-3. config/active.yml を環境に合わせて編集
+`投稿日 / 時間帯 / 投稿文 / 種別 / ネタID / 投稿済 / 投稿ID / エラー`
 
-## ドキュメント
+### ネタストック
 
-docs/design_document_v1.0.md - 設計書 v1.0
-docs/RULES.md - 開発ルール
-docs/DECISIONS.md - 決定ログ
-docs/BACKLOG.md - バックログ
+`ID / 日付 / 場面 / 最初の言葉 / カテゴリ / フラットな言葉 / 少し前向きな言葉 / 視点変更 / 根拠/出典 / 使用済`
 
-## ライセンス
+主なカテゴリ:
 
-Private repository - Not for redistribution.
+- `reassurance`
+- `neutral_reframe`
+- `temporal_distance`
+- `other_blame`
+- `attack_reframe`
+- `excuse_to_action`
+- `self_reflection`
+
+## GitHub Actions
+
+- `setup-sheets.yml` - Sheets初期構築（手動）
+- `post-morning.yml` - 毎日 7:00 JST
+- `post-evening.yml` - 毎日 20:00 JST
+- `weekly-insights.yml` - 毎週月曜 9:00 JST
+- `monthly-token-check.yml` - 毎月1日 9:00 JST
+- `test.yml` - ユニットテスト
+
+WIFを使うジョブには `id-token: write` を付与します。
+
+## 必要な GitHub Secrets
+
+- `THREADS_ACCESS_TOKEN`
+- `THREADS_USER_ID`
+- `SPREADSHEET_ID`
+
+`GOOGLE_SHEETS_CREDENTIALS` は使用しません。
+
+## 初回セットアップ
+
+1. 上記3つのGitHub Secretsを設定
+2. SpreadsheetをWIFで使用するサービスアカウントへ編集者共有
+3. PRをmainへ反映
+4. `Setup Google Sheets` を手動実行
+5. 作成されたタブとヘッダーを確認
+6. 投稿キューへテスト投稿を1件だけ登録
+7. 朝または夜のworkflowを手動実行
+8. Threads投稿・投稿ログ・投稿済フラグを確認
+
+## 投稿時間
+
+- 朝: 今日を少し楽に始め、前を向けるところまで戻す
+- 夜: 今日抱えたものを少し下ろし、明日まで持ち越さない余白をつくる
+
+日時判定とログは `Asia/Tokyo` / JST を使用します。
+
+## note
+
+Phase 1ではnoteの収益化機能・記事量産は使用しません。Threadsで思想と反応を育ててから再検討します。
+
+## 旧おつまみごろー
+
+旧プロンプトは `archive/otsumamigoro/` に退避しています。過去の設計や記事はGit履歴から参照できます。

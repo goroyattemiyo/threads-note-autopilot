@@ -1,23 +1,29 @@
 """Google Sheets 操作モジュール"""
-import json
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import gspread
-from google.oauth2.service_account import Credentials
+from google.auth import default as google_auth_default
 
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive",
 ]
+JST = ZoneInfo("Asia/Tokyo")
+
+
+def get_default_credentials():
+    """GitHub Actions の WIF / ADC から Google 認証情報を取得する。"""
+    credentials, _ = google_auth_default(scopes=SCOPES)
+    return credentials
 
 
 class SheetManager:
     """Google Sheets の読み書きを担当"""
 
-    def __init__(self, credentials_json: str, spreadsheet_id: str):
-        creds_dict = json.loads(credentials_json)
-        creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+    def __init__(self, spreadsheet_id: str, credentials=None):
+        creds = credentials or get_default_credentials()
         gc = gspread.authorize(creds)
         self.spreadsheet = gc.open_by_key(spreadsheet_id)
 
@@ -25,8 +31,13 @@ class SheetManager:
         """シートを取得"""
         return self.spreadsheet.worksheet(sheet_name)
 
+    @staticmethod
+    def _normalize_date(value: str) -> str:
+        """Sheets 上の日付表記を YYYY/MM/DD に寄せる。"""
+        return str(value).strip().replace("-", "/")
+
     def get_next_post(self, queue_sheet: str, time_slot: str) -> dict | None:
-        """投稿キューから次の未投稿を取得
+        """投稿キューからJST基準で次の未投稿を取得する。
 
         Args:
             queue_sheet: シート名
@@ -38,22 +49,22 @@ class SheetManager:
         """
         ws = self._get_worksheet(queue_sheet)
         records = ws.get_all_records()
-        today = datetime.now().strftime("%Y/%m/%d")
+        today = datetime.now(JST).strftime("%Y/%m/%d")
 
         for i, row in enumerate(records):
-            row_date = str(row.get("投稿日", ""))
-            row_slot = str(row.get("時間帯", ""))
-            row_posted = str(row.get("投稿済", ""))
+            row_date = self._normalize_date(row.get("投稿日", ""))
+            row_slot = str(row.get("時間帯", "")).strip()
+            row_posted = str(row.get("投稿済", "")).strip().upper()
             row_text = str(row.get("投稿文", ""))
 
             if (
                 row_date == today
                 and row_slot == time_slot
-                and row_posted.upper() != "TRUE"
+                and row_posted not in ("TRUE", "ERROR")
                 and row_text.strip()
             ):
                 return {
-                    "row": i + 2,  # ヘッダー行 + 0-indexed
+                    "row": i + 2,
                     "date": row_date,
                     "time_slot": row_slot,
                     "text": row_text,
@@ -65,20 +76,20 @@ class SheetManager:
     def mark_as_posted(self, queue_sheet: str, row: int, post_id: str):
         """投稿済みフラグとIDを記録"""
         ws = self._get_worksheet(queue_sheet)
-        ws.update_cell(row, 6, "TRUE")    # F列: 投稿済
-        ws.update_cell(row, 7, post_id)   # G列: 投稿ID
+        ws.update_cell(row, 6, "TRUE")
+        ws.update_cell(row, 7, post_id)
 
     def mark_as_error(self, queue_sheet: str, row: int, error_msg: str):
         """エラーを記録"""
         ws = self._get_worksheet(queue_sheet)
-        ws.update_cell(row, 6, "ERROR")              # F列: 投稿済
-        ws.update_cell(row, 8, error_msg[:200])       # H列: エラー
+        ws.update_cell(row, 6, "ERROR")
+        ws.update_cell(row, 8, error_msg[:200])
 
     def log_post(self, log_sheet: str, post_id: str, text: str,
                  post_type: str, status: str):
-        """投稿ログに記録"""
+        """投稿ログにJSTで記録"""
         ws = self._get_worksheet(log_sheet)
-        now = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+        now = datetime.now(JST).strftime("%Y/%m/%d %H:%M:%S")
         ws.append_row([now, post_id, text[:50], post_type, status])
 
     def get_queue_status(self, queue_sheet: str) -> dict:
