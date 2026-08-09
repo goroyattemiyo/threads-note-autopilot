@@ -23,12 +23,11 @@ def build_clients() -> tuple[ThreadsAPI, SheetManager]:
     """Threads API と Sheets クライアントを初期化する。"""
     access_token = load_env("THREADS_ACCESS_TOKEN")
     user_id = load_env("THREADS_USER_ID")
-    sheets_creds = load_env("GOOGLE_SHEETS_CREDENTIALS")
     spreadsheet_id = load_env("SPREADSHEET_ID")
 
     return (
         ThreadsAPI(access_token, user_id),
-        SheetManager(sheets_creds, spreadsheet_id),
+        SheetManager(spreadsheet_id),
     )
 
 
@@ -38,7 +37,6 @@ def run_post(time_slot: str):
 
     api, sheets = build_clients()
 
-    # 次の投稿を取得
     print("投稿キューを確認中...")
     post_data = sheets.get_next_post(QUEUE_SHEET, time_slot)
 
@@ -49,7 +47,6 @@ def run_post(time_slot: str):
     print(f"投稿対象: row={post_data['row']} 種別={post_data['type']}")
     print(f"投稿文: {post_data['text'][:50]}...")
 
-    # Threads に投稿
     result = api.post_text(post_data["text"])
 
     if "error" in result:
@@ -68,7 +65,6 @@ def run_post(time_slot: str):
     post_id = result.get("id", "")
     print(f"投稿完了: {post_id}")
 
-    # Sheets 更新
     sheets.mark_as_posted(QUEUE_SHEET, post_data["row"], post_id)
     sheets.log_post(
         LOG_SHEET,
@@ -82,9 +78,8 @@ def run_post(time_slot: str):
 
 def run_status():
     """キューの状態を表示"""
-    sheets_creds = load_env("GOOGLE_SHEETS_CREDENTIALS")
     spreadsheet_id = load_env("SPREADSHEET_ID")
-    sheets = SheetManager(sheets_creds, spreadsheet_id)
+    sheets = SheetManager(spreadsheet_id)
     status = sheets.get_queue_status(QUEUE_SHEET)
 
     print("=== 投稿キュー状態 ===")
