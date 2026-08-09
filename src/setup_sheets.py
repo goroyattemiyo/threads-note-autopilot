@@ -1,10 +1,9 @@
 """ことばの距離プロジェクト用 Google Sheets 初期セットアップ。"""
-import json
 import os
 import sys
 
 import gspread
-from google.oauth2.service_account import Credentials
+from google.auth import default as google_auth_default
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -62,12 +61,9 @@ def require_env(key: str) -> str:
 
 
 def setup():
-    creds_json = require_env("GOOGLE_SHEETS_CREDENTIALS")
     spreadsheet_id = require_env("SPREADSHEET_ID")
-
-    creds_dict = json.loads(creds_json)
-    creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
-    gc = gspread.authorize(creds)
+    credentials, _ = google_auth_default(scopes=SCOPES)
+    gc = gspread.authorize(credentials)
 
     spreadsheet = gc.open_by_key(spreadsheet_id)
     print(f"スプレッドシート接続完了: {spreadsheet.title}")
@@ -98,7 +94,6 @@ def setup():
         )
         print(f"    ヘッダー設定完了 ({len(headers)}列)")
 
-    # デフォルトの Sheet1 があれば削除
     for ws in spreadsheet.worksheets():
         if ws.title in ["Sheet1", "シート1"]:
             spreadsheet.del_worksheet(ws)
