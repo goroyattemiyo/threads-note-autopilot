@@ -1,65 +1,66 @@
 # threads-note-autopilot - 設計判断ログ
 
----
-
-## D-001: アーキテクチャ選定（GitHub Actions + Sheets + Threads API）
+## D-001: アーキテクチャ選定
 - 日付: 2026-03-17
-- 背景: GAS で運用していた Threads 自動投稿を GitHub に移植し、ジャンルテンプレート化する必要があった
-- 選択肢: A) GAS継続 B) GitHub Actions + Python C) VPS + cron
-- 決定: B) GitHub Actions + Python
-- 理由: Codespaces で開発完結、無料枠で20ジャンル対応可能、git管理と相性が良い
+- 決定: GitHub Actions + Python + Google Sheets + Threads API
+- 理由: 低コスト、Git管理しやすい、投稿とログを分離できる
 
-## D-002: Meta Developer 構成（1アプリ・複数テストユーザー）
+## D-002: Meta Developer 構成
 - 日付: 2026-03-17
-- 背景: ジャンルごとに別アプリが必要か検討
-- 選択肢: A) 1アプリ+テストユーザー B) ジャンル別アプリ C) 完全分離
-- 決定: A) 1アプリ+テストユーザー
-- 理由: 管理最小化、レート250件/日は10件/日で余裕、BAN時はBへ段階移行
+- 決定: 1アプリ + 複数テストユーザーを基本とする
+- 理由: 管理コストを抑えつつ複数アカウントに対応できる
 
-## D-003: アカウント設計（おつまみごろー・料理×暮らしクロスジャンル）
+## D-003: 旧アカウント設計（履歴）
 - 日付: 2026-03-17
-- 背景: 既存の未使用アカウント「おつまみごろー」を活用するにあたりジャンルを決定
-- 選択肢: A) 暮らし特化（名前変更必要） B) 料理特化 C) 料理×暮らしクロス
-- 決定: C) 料理×暮らしクロスジャンル
-- 理由: 名前との整合性、運営者の興味との一致、「グッズ×レシピ」セット提案で差別化
-- 有識者議論: SNSマーケター・noteクリエイター・エンジニアの3名で検討
+- 決定: 「おつまみごろー」で料理×暮らしを運用
+- 状態: 2026-08-09 に終了。現行設計では使用しない
 
-## D-004: コア3ファイル実装設計
+## D-004: コア3ファイル分離
 - 日付: 2026-03-17
-- 背景: Phase 1-a の最小動作確認に必要なコアスクリプトの実装
-- 有識者: アーキテクト / QAエンジニア / DevOpsエンジニア
-- 決定: threads_api.py(API通信), sheets.py(データ操作), post.py(オーケストレーション)の3ファイル分離
-- 設計方針: クラスベース、DI可能、リトライ3回指数バックオフ、250行制限
-- スコア: 37/40 (92.5%) → 着手許可
+- 決定: `threads_api.py` / `sheets.py` / `post.py` を分離
+- 理由: API通信、データ操作、オーケストレーションの責務を分ける
 
-## D-004: コア3ファイル実装設計
+## D-005: Insights / token check / テンプレート追加
 - 日付: 2026-03-17
-- 背景: Phase 1-a の最小動作確認に必要なコアスクリプトの実装
-- 有識者: アーキテクト / QAエンジニア / DevOpsエンジニア
-- 決定: threads_api.py(API通信), sheets.py(データ操作), post.py(オーケストレーション)の3ファイル分離
-- 設計方針: クラスベース、DI可能、リトライ3回指数バックオフ、250行制限
-- スコア: 37/40 (92.5%) → 着手許可
+- 決定: 週次Insights、月次token check、設定・プロンプトテンプレートを追加
+- 状態: 基盤として継続利用。コンテンツ固有部分はD-006で置換
 
----
+## D-006: 「ことばの距離」への全面転生 Phase 1
+- 日付: 2026-08-09
+- 背景: 旧「おつまみごろー」アカウントを `goro｜ことばの距離` として再利用する
+- 承認: 変更方針を提示後、ユーザーから実装承認あり
 
-### D-005: 残りファイル一括作成（2026-03-17）
+### 検討視点
+- アーキテクチャ: 投稿基盤は十分再利用可能。ジャンル汎用化より専用化を優先
+- QA: GitHub Actions朝投稿でUTC日付を使うとJST日付とずれる可能性がある
+- コンテンツ: 商品紹介向けプロンプト・Sheetsスキーマは新テーマと不整合
+- セキュリティ/運用: 旧 `KURASHI_*` Secret名とSpreadsheet IDのハードコードを除去すべき
 
-| 項目 | 内容 |
-|---|---|
-| 日付 | 2026-03-17 |
-| スコア | 36/40 → 承認 |
-| 背景 | 設計書で定義された全ファイルとの差分を解消する |
-| 作成物 | src/utils.py, src/insights.py, src/token_check.py, weekly-insights.yml, monthly-token-check.yml, config/_template.yml, prompts/_template/×3, README.md更新 |
-| 方針 | 既存 post.py は変更せず、新規ファイルのみ utils.py を使用。次回リファクタ時に post.py も移行 |
+### 決定
+1. 投稿基盤 `post.py` / `threads_api.py` / `sheets.py` / Actions / Insights は再利用する
+2. Sheetsの日付判定とログ日時は `Asia/Tokyo` に統一する
+3. Secret名を `THREADS_ACCESS_TOKEN` / `THREADS_USER_ID` / `SPREADSHEET_ID` に汎用化する
+4. ネタストックを「場面・最初の言葉・フラット・少し前向き・視点変更・根拠/出典」へ変更する
+5. 投稿思想を「ネガティブ → フラット → できれば少しポジティブ」とする
+6. noteの自動量産・CTA・収益化はPhase 1では停止する
+7. 旧おつまみ用プロンプトは `archive/otsumamigoro/` へ退避する
+8. mainへ直接変更せず `feat/kotoba-no-kyori-phase1` で実装し、テスト後にPRとする
 
----
+### 影響範囲
+- `src/post.py`
+- `src/sheets.py`
+- `src/setup_sheets.py`
+- `src/utils.py`
+- GitHub Actions 4本
+- `config/_template.yml`
+- `prompts/`
+- README / docs
 
-### D-005: 残りファイル一括作成（2026-03-17）
+### ロールバック
+`feat/kotoba-no-kyori-phase1` を破棄すればmainは旧状態のまま維持される。
 
-| 項目 | 内容 |
-|---|---|
-| 日付 | 2026-03-17 |
-| スコア | 36/40 → 承認 |
-| 背景 | 設計書で定義された全ファイルとの差分を解消 |
-| 作成物 | utils.py, insights.py, token_check.py, workflows x2, _template.yml, prompts/_template x3, README |
-| 方針 | 既存post.pyは変更せず新規ファイルのみutils.py使用 |
+### 未実装として残すもの
+- Threads API `topic_tag`
+- Insights追加メトリクス
+- Long-Lived Token refresh正式実装
+- note再設計
