@@ -6,14 +6,9 @@
 
 ## 1. ミッション
 
-日常の小さな悩み・イライラ・他責・攻撃的な言葉を、
-無理にポジティブへ飛ばさず、ことばと視点を少し遠ざけて扱いやすくする。
+日常の小さな悩み・イライラ・他責・攻撃的な言葉を、無理にポジティブへ飛ばさず、ことばと視点を少し遠ざけて扱いやすくする。
 
-発信の基本変換は次の順番とする。
-
-**ネガティブ → フラット → できれば少しポジティブ**
-
-フラットで止めることを許容する。
+発信の基本変換は **ネガティブ → フラット → できれば少しポジティブ**。フラットで止めることを許容する。
 
 ## 2. アカウント
 
@@ -24,37 +19,29 @@
 
 ## 3. 投稿ポリシー
 
-### 3.1 朝
+### 朝 7:00 JST
 
-7:00 JST。
-
-目的:
 - 今日を少し楽に始める
 - 前を向けるところまで戻す
 - フラット〜軽いポジティブを中心にする
 
-### 3.2 夜
+### 夜 20:00 JST
 
-20:00 JST。
-
-目的:
 - 今日抱えたものを少し下ろす
 - 嫌な出来事を人生全体へ広げない
 - 明日まで持ち越さなくてよい余白をつくる
 
-### 3.3 投稿カテゴリ
+### 投稿カテゴリ
 
-- reassurance: 不安・疲れに安心を返す
-- neutral_reframe: 強い言葉を事実ベースへ戻す
-- temporal_distance: 時間軸を遠ざける
-- other_blame: 他責から自分が動かせる部分へ戻す
-- attack_reframe: 攻撃語を具体的な出来事・期待・価値観へ言い換える
-- excuse_to_action: 言い訳を次の一手へつなげる
-- self_reflection: 感情の奥の価値観を見る
+- reassurance
+- neutral_reframe
+- temporal_distance
+- other_blame
+- attack_reframe
+- excuse_to_action
+- self_reflection
 
 ## 4. 言葉の安全設計
-
-以下を守る。
 
 - ネガティブ感情そのものを否定しない
 - 「考え方次第」「気にしなければいい」で片付けない
@@ -79,77 +66,65 @@
 ### 自動
 
 GitHub Actions
+→ GitHub OIDC
+→ Google Cloud Workload Identity Federation
+→ サービスアカウント権限借用
+→ Application Default Credentials
 → `src/post.py`
-→ `src/threads_api.py`
-→ Threads API
-→ Sheets「投稿ログ」
+→ Threads API / Google Sheets
 
 ### 週次
 
 GitHub Actions
+→ WIF認証
 → `src/insights.py`
 → Sheets「インサイト」
 → 投稿カテゴリ別に反応を振り返る
 
 ## 6. Google Sheets スキーマ
 
-### 6.1 投稿キュー
+### 投稿キュー
 
-| 列 | 内容 |
-|---|---|
-| 投稿日 | YYYY/MM/DD、JST |
-| 時間帯 | morning / evening |
-| 投稿文 | Threads本文 |
-| 種別 | 投稿カテゴリ |
-| ネタID | ネタストックとの対応 |
-| 投稿済 | TRUE / ERROR / 空欄 |
-| 投稿ID | Threads投稿ID |
-| エラー | エラー概要 |
+投稿日 / 時間帯 / 投稿文 / 種別 / ネタID / 投稿済 / 投稿ID / エラー
 
-### 6.2 ネタストック
+### ネタストック
 
-| 列 | 内容 |
-|---|---|
-| ID | K001など |
-| 日付 | 記録日 |
-| 場面 | 何が起きたか |
-| 最初の言葉 | 頭に浮かびやすい言葉 |
-| カテゴリ | 投稿カテゴリ |
-| フラットな言葉 | 事実ベースへ戻した言葉 |
-| 少し前向きな言葉 | 余裕がある場合の次の表現 |
-| 視点変更 | 時間軸・責任範囲など |
-| 根拠/出典 | 原体験・本・論文など |
-| 使用済 | TRUE / FALSE |
+ID / 日付 / 場面 / 最初の言葉 / カテゴリ / フラットな言葉 / 少し前向きな言葉 / 視点変更 / 根拠/出典 / 使用済
 
-### 6.3 投稿ログ
+### 投稿ログ
 
 投稿日時 / 投稿ID / 投稿文 / 種別 / ステータス
 
-### 6.4 インサイト
+### インサイト
 
 取得日 / 投稿ID / views / likes / replies / reposts / quotes
 
 ## 7. タイムゾーン
 
-日時判定はすべて `Asia/Tokyo` / JST を基準にする。
-
-GitHub Actions cron はUTCで指定する。
+日時判定は `Asia/Tokyo` / JST を基準にする。
 
 - 朝7:00 JST = 前日22:00 UTC
 - 夜20:00 JST = 11:00 UTC
 
-Sheets上の「投稿日」の判定は、Actionsホストのローカル時刻ではなくJSTで行う。
+Sheets上の「投稿日」の判定はActionsホストのローカル時刻ではなくJSTで行う。
 
-## 8. Secrets
+## 8. 認証・Secrets
 
-現行は以下に統一する。
+Threads:
 
-- THREADS_ACCESS_TOKEN
-- THREADS_USER_ID
-- SPREADSHEET_ID
-- GOOGLE_SHEETS_CREDENTIALS
+- `THREADS_ACCESS_TOKEN`
+- `THREADS_USER_ID`
 
-旧 `KURASHI_*` は使用しない。
+Google Sheets:
+
+- `SPREADSHEET_ID`
+- GitHub Actions OIDC + Google Cloud WIF
+- `google-github-actions/auth@v3`
+- Python側は `google.auth.default()` を使用
+
+サービスアカウントJSONキーおよび `GOOGLE_SHEETS_CREDENTIALS` は使用しない。
+
+WIFのGoogle Cloud側では、GitHubリポジトリのmainブランチから来るOIDC subjectだけにサービスアカウント権限借用を許可する。
 
 ## 9. note
 
@@ -182,7 +157,7 @@ Phase 1では停止。
 ## 11. Phase 1 完了条件
 
 1. JSTで朝夜の投稿対象日が正しく判定される
-2. 新しいSecrets名だけで投稿・Insightsが動く
+2. WIF/ADCでGoogle Sheetsへ接続できる
 3. ことばの距離用Sheetsスキーマが用意される
 4. 投稿生成プロンプトがことばの距離の思想に一致する
 5. 手動 `workflow_dispatch` でテスト投稿できる
@@ -190,11 +165,8 @@ Phase 1では停止。
 
 ## 12. 後続バックログ
 
-Phase 1では実装しない。
-
 - Threads API `topic_tag` 対応
-- Insightsの追加メトリクス対応
+- Insights追加メトリクス対応
 - Access Token refreshの正式実装
 - 投稿カテゴリ別の週次自動集計
 - note再開設計
-- 旧noteドラフトの整理
