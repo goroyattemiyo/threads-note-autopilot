@@ -50,13 +50,13 @@ class SheetManager:
         for i, row in enumerate(records):
             row_date = self._normalize_date(row.get("投稿日", ""))
             row_slot = str(row.get("時間帯", "")).strip()
-            row_posted = str(row.get("投稿済", "")).strip()
+            row_posted = str(row.get("投稿済", "")).strip().upper()
             row_text = str(row.get("投稿文", ""))
 
             if (
                 row_date == today
                 and row_slot == time_slot
-                and row_posted.upper() != "TRUE"
+                and row_posted not in ("TRUE", "ERROR")
                 and row_text.strip()
             ):
                 return {
