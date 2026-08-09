@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from sheets import JST, SheetManager
+from sheets import JST, SCOPES, SheetManager
 
 
 class SheetManagerTest(unittest.TestCase):
@@ -13,6 +13,23 @@ class SheetManagerTest(unittest.TestCase):
         self.manager = SheetManager.__new__(SheetManager)
         self.ws = MagicMock()
         self.manager._get_worksheet = MagicMock(return_value=self.ws)
+
+    @patch("sheets.gspread.authorize")
+    @patch("sheets.google_auth_default")
+    def test_constructor_uses_adc(self, mock_default, mock_authorize):
+        credentials = MagicMock()
+        spreadsheet = MagicMock()
+        client = MagicMock()
+        client.open_by_key.return_value = spreadsheet
+        mock_default.return_value = (credentials, "project-id")
+        mock_authorize.return_value = client
+
+        manager = SheetManager("sheet-id")
+
+        mock_default.assert_called_once_with(scopes=SCOPES)
+        mock_authorize.assert_called_once_with(credentials)
+        client.open_by_key.assert_called_once_with("sheet-id")
+        self.assertIs(manager.spreadsheet, spreadsheet)
 
     def test_normalize_date_accepts_hyphen(self):
         self.assertEqual(
