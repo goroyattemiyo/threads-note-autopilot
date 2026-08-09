@@ -64,6 +64,26 @@ class SheetManagerTest(unittest.TestCase):
         result = self.manager.get_next_post("投稿キュー", "morning")
         self.assertIsNone(result)
 
+    @patch("sheets.datetime")
+    def test_get_next_post_skips_error_row(self, mock_datetime):
+        now = MagicMock()
+        now.strftime.return_value = "2026/08/09"
+        mock_datetime.now.return_value = now
+
+        self.ws.get_all_records.return_value = [
+            {
+                "投稿日": "2026/08/09",
+                "時間帯": "morning",
+                "投稿文": "再投稿してはいけない文",
+                "種別": "reassurance",
+                "ネタID": "KERR",
+                "投稿済": "ERROR",
+            }
+        ]
+
+        result = self.manager.get_next_post("投稿キュー", "morning")
+        self.assertIsNone(result)
+
 
 if __name__ == "__main__":
     unittest.main()
