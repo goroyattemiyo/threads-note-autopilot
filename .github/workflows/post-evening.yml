@@ -1,7 +1,7 @@
-name: Evening Post (JST 20:00)
+name: Evening Post (JST 20:07)
 on:
   schedule:
-    - cron: '0 11 * * *'
+    - cron: '7 11 * * *'
   workflow_dispatch:
 
 permissions:
