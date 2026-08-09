@@ -12,7 +12,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive",
 ]
-SPREADSHEET_ID = "1LBzuBpfMBIFPtnsF9Pbhs9LmC0lBgQSOGTQ5uK1Y_7Y"
+
 
 def get_logger(name):
     logger = logging.getLogger(name)
@@ -23,6 +23,7 @@ def get_logger(name):
         logger.setLevel(logging.INFO)
     return logger
 
+
 def require_env(key):
     value = os.environ.get(key)
     if not value:
@@ -30,11 +31,16 @@ def require_env(key):
         sys.exit(1)
     return value
 
+
 def get_threads_credentials():
-    return require_env("KURASHI_ACCESS_TOKEN"), require_env("KURASHI_USER_ID")
+    """ことばの距離用Threads認証情報を汎用Secret名から取得する。"""
+    return require_env("THREADS_ACCESS_TOKEN"), require_env("THREADS_USER_ID")
+
 
 def get_sheets_client():
+    """環境変数で指定したGoogle Sheetsを開く。"""
     creds_json = require_env("GOOGLE_SHEETS_CREDENTIALS")
+    spreadsheet_id = require_env("SPREADSHEET_ID")
     creds = Credentials.from_service_account_info(json.loads(creds_json), scopes=SCOPES)
     gc = gspread.authorize(creds)
-    return gc.open_by_key(SPREADSHEET_ID)
+    return gc.open_by_key(spreadsheet_id)
