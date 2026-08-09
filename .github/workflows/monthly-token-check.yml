@@ -22,5 +22,5 @@ jobs:
         working-directory: src
         run: python token_check.py
         env:
-          KURASHI_ACCESS_TOKEN: ${{ secrets.KURASHI_ACCESS_TOKEN }}
-          KURASHI_USER_ID: ${{ secrets.KURASHI_USER_ID }}
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
