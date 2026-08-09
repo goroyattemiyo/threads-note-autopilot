@@ -1,10 +1,9 @@
 """Google Sheets 操作モジュール"""
-import json
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import gspread
-from google.oauth2.service_account import Credentials
+from google.auth import default as google_auth_default
 
 
 SCOPES = [
@@ -14,12 +13,17 @@ SCOPES = [
 JST = ZoneInfo("Asia/Tokyo")
 
 
+def get_default_credentials():
+    """GitHub Actions の WIF / ADC から Google 認証情報を取得する。"""
+    credentials, _ = google_auth_default(scopes=SCOPES)
+    return credentials
+
+
 class SheetManager:
     """Google Sheets の読み書きを担当"""
 
-    def __init__(self, credentials_json: str, spreadsheet_id: str):
-        creds_dict = json.loads(credentials_json)
-        creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+    def __init__(self, spreadsheet_id: str, credentials=None):
+        creds = credentials or get_default_credentials()
         gc = gspread.authorize(creds)
         self.spreadsheet = gc.open_by_key(spreadsheet_id)
 
@@ -60,7 +64,7 @@ class SheetManager:
                 and row_text.strip()
             ):
                 return {
-                    "row": i + 2,  # ヘッダー行 + 0-indexed
+                    "row": i + 2,
                     "date": row_date,
                     "time_slot": row_slot,
                     "text": row_text,
@@ -72,14 +76,14 @@ class SheetManager:
     def mark_as_posted(self, queue_sheet: str, row: int, post_id: str):
         """投稿済みフラグとIDを記録"""
         ws = self._get_worksheet(queue_sheet)
-        ws.update_cell(row, 6, "TRUE")    # F列: 投稿済
-        ws.update_cell(row, 7, post_id)   # G列: 投稿ID
+        ws.update_cell(row, 6, "TRUE")
+        ws.update_cell(row, 7, post_id)
 
     def mark_as_error(self, queue_sheet: str, row: int, error_msg: str):
         """エラーを記録"""
         ws = self._get_worksheet(queue_sheet)
-        ws.update_cell(row, 6, "ERROR")              # F列: 投稿済
-        ws.update_cell(row, 8, error_msg[:200])       # H列: エラー
+        ws.update_cell(row, 6, "ERROR")
+        ws.update_cell(row, 8, error_msg[:200])
 
     def log_post(self, log_sheet: str, post_id: str, text: str,
                  post_type: str, status: str):
