@@ -19,7 +19,6 @@ class PostClientTest(unittest.TestCase):
         env = {
             "THREADS_ACCESS_TOKEN": "token",
             "THREADS_USER_ID": "user",
-            "GOOGLE_SHEETS_CREDENTIALS": '{"type":"service_account"}',
             "SPREADSHEET_ID": "sheet-id",
         }
 
@@ -27,10 +26,7 @@ class PostClientTest(unittest.TestCase):
             post.build_clients()
 
         mock_threads_api.assert_called_once_with("token", "user")
-        mock_sheet_manager.assert_called_once_with(
-            '{"type":"service_account"}',
-            "sheet-id",
-        )
+        mock_sheet_manager.assert_called_once_with("sheet-id")
 
     def test_load_env_exits_when_missing(self):
         with patch.dict(os.environ, {}, clear=True):
