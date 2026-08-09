@@ -1,70 +1,47 @@
-# ジャンルテンプレート設定
-# 新ジャンル追加時にコピーして active.yml として使用
-genre: "YOUR_GENRE_SLUG"
-display_name: "YOUR_DISPLAY_NAME"
-persona: "ペルソナの説明をここに記載"
+# ことばの距離プロジェクト設定テンプレート
+project: "kotoba-no-kyori"
+display_name: "goro｜ことばの距離"
+persona: >-
+  日常の小さなイライラや悩みに対して、無理にポジティブへ飛ばず、
+  まずネガティブな言葉をフラットに戻し、余裕があれば少し前向きな
+  言葉へ進める。相手を裁かず、ことばと視点の距離を取り直す人。
+
 threads:
-  handle: "@YOUR_HANDLE"
+  handle: "@goro_kotobanokyori"
   posts_per_day: 2
   morning_time: "07:00"
   evening_time: "20:00"
-  topic_tags:
-    - "タグ1"
-    - "タグ2"
-    - "タグ3"
-phases:
-  growth:
-    range: "0-3000"
-    posts_per_day: 2
-    content_mix:
-      goods_recipe: 4
-      goods_review: 3
-      quick_recipe: 2
-      failure_story: 2
-      poll: 1
-      note_cta: 2
-  establish:
-    range: "3000-10000"
-    posts_per_day: 2
-    content_mix:
-      goods_recipe: 3
-      goods_review: 2
-      quick_recipe: 3
-      failure_story: 1
-      poll: 1
-      note_cta: 4
-  authority:
-    range: "10000+"
-    posts_per_day: 1
-    content_mix:
-      goods_recipe: 2
-      goods_review: 1
-      quick_recipe: 2
-      failure_story: 1
-      poll: 1
-      note_cta: 7
-current_phase: "growth"
+  content_types:
+    - "reassurance"
+    - "neutral_reframe"
+    - "temporal_distance"
+    - "other_blame"
+    - "attack_reframe"
+    - "excuse_to_action"
+    - "self_reflection"
+
+writing:
+  principle: "negative_to_flat_then_positive"
+  rules:
+    - "ネガティブな感情そのものを否定しない"
+    - "フラットで止めてもよい"
+    - "相手の責任と自分が次に選べる行動を分ける"
+    - "他人を見下す・断罪する表現を使わない"
+    - "安心を届ける投稿では絵文字を1〜2個まで使う"
+    - "CTAを毎回入れない"
+
 sheets:
-  spreadsheet_id: "YOUR_SPREADSHEET_ID"
   queue_sheet: "投稿キュー"
   neta_sheet: "ネタストック"
   log_sheet: "投稿ログ"
   insight_sheet: "インサイト"
-  note_sheet: "note実績"
+
 note:
-  articles_per_month: 2
-  free_articles_per_month: 4
-  price_range_min: 490
-  price_range_max: 980
-  free_preview_ratio: 0.3
-  themes:
-    - "テーマ1"
-    - "テーマ2"
-cross_genre:
-  primary: "YOUR_PRIMARY"
-  secondary: ""
-  cross_theme: ""
-secrets_prefix: "YOUR_PREFIX"
-ai_disclosure: false
+  enabled: false
+  policy: "Threadsで思想と反応を育ててから再検討する"
+
 profile:
-  bio: "プロフィール文をここに記載"
+  bio: >-
+    小さな悩みを、少し遠くから見てみる。
+    ことばと視点を変えて、気持ちを少し軽くする。
+    どうでもいいことを手放して、大切なものに戻る。
