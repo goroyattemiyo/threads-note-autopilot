@@ -1,0 +1,44 @@
+name: Update Kotoba Week 2026-08-11 v2
+
+on:
+  push:
+    paths:
+      - '.github/workflows/update-kotoba-week-20260811-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  GCP_PROJECT_ID: project-23377501-df9e-4686-987
+  GCP_WIF_PROVIDER: projects/879005049988/locations/global/workloadIdentityPools/github-actions/providers/github-actions
+  GCP_SERVICE_ACCOUNT: kotoba-no-kyori-sheets@project-23377501-df9e-4686-987.iam.gserviceaccount.com
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ env.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Refresh posts and ideas
+        run: python scripts/update_kotoba_week_20260811_v2.py | tee /tmp/update-result.txt
+      - name: Record update status
+        run: |
+          mkdir -p data
+          cat /tmp/update-result.txt > data/update-kotoba-week-20260811-v2.status
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add data/update-kotoba-week-20260811-v2.status
+          git commit -m 'chore: record Aug 11-17 refresh [skip ci]' || true
+          git push
