@@ -43,6 +43,11 @@ SHEETS_CONFIG = {
     "インサイト": [
         "取得日",
         "投稿ID",
+        "投稿日",
+        "時間帯",
+        "投稿文",
+        "種別",
+        "ネタID",
         "views",
         "likes",
         "replies",
@@ -82,6 +87,9 @@ def setup():
                 cols=len(headers),
             )
             print(f"  新規シート作成: {sheet_name}")
+
+        if ws.col_count < len(headers):
+            ws.resize(cols=len(headers))
 
         ws.update([headers], "A1")
         end_column = chr(64 + len(headers))
