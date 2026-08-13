@@ -1,7 +1,7 @@
-name: Weekly Insights (Monday JST 9:00)
+name: Weekly Insights (Monday JST 9:07)
 on:
   schedule:
-    - cron: '0 0 * * 1'
+    - cron: '7 0 * * 1'
   workflow_dispatch:
 
 permissions:
