@@ -24,6 +24,7 @@ LEGACY_INSIGHT_HEADERS = [
 INSIGHT_HEADERS = [
     "取得日",
     "投稿ID",
+    "投稿日時",
     "投稿日",
     "時間帯",
     "投稿文",
@@ -63,11 +64,7 @@ def fetch_insights(thread_id, access_token):
 
 
 def build_post_metadata(spreadsheet, log_rows):
-    """投稿IDをキーに、投稿キューの全文・種別・ネタID等を引ける辞書を作る。
-
-    投稿キューに見つからない古い投稿は、投稿ログの短縮本文と種別を
-    フォールバックとして使う。
-    """
+    """投稿IDをキーに、投稿キューと投稿ログの情報を統合する。"""
     metadata = {}
 
     queue_ws = spreadsheet.worksheet("投稿キュー")
@@ -76,6 +73,7 @@ def build_post_metadata(spreadsheet, log_rows):
         if not thread_id:
             continue
         metadata[thread_id] = {
+            "posted_at": "",
             "date": str(row.get("投稿日", "")).strip(),
             "time_slot": str(row.get("時間帯", "")).strip(),
             "text": str(row.get("投稿文", "")),
@@ -83,26 +81,33 @@ def build_post_metadata(spreadsheet, log_rows):
             "neta_id": str(row.get("ネタID", "")).strip(),
         }
 
+    # 投稿ログは実際の投稿日時を持つ。キューに無い古い投稿については
+    # 短縮本文・種別のフォールバックにも使う。
     for row in log_rows:
         thread_id = str(row.get("投稿ID", "")).strip()
-        if not thread_id or thread_id in metadata:
+        if not thread_id:
             continue
-        metadata[thread_id] = {
-            "date": "",
-            "time_slot": "",
-            "text": str(row.get("投稿文", "")),
-            "type": str(row.get("種別", "")).strip(),
-            "neta_id": "",
-        }
+
+        if thread_id not in metadata:
+            metadata[thread_id] = {
+                "posted_at": "",
+                "date": "",
+                "time_slot": "",
+                "text": str(row.get("投稿文", "")),
+                "type": str(row.get("種別", "")).strip(),
+                "neta_id": "",
+            }
+
+        metadata[thread_id]["posted_at"] = str(row.get("投稿日時", "")).strip()
 
     return metadata
 
 
 def ensure_insight_schema(worksheet, metadata):
-    """旧7列インサイトを新12列へ安全に移行する。
+    """旧7列インサイトを新13列へ安全に移行する。
 
-    既存の取得履歴は残し、投稿IDが投稿キューに存在すれば
-    投稿日・時間帯・投稿文・種別・ネタIDも同時に補完する。
+    既存の取得履歴は残し、投稿IDが投稿キュー/投稿ログに存在すれば
+    投稿日時・投稿日・時間帯・投稿文・種別・ネタIDも同時に補完する。
     """
     values = worksheet.get_all_values()
     worksheet.resize(cols=len(INSIGHT_HEADERS))
@@ -130,6 +135,7 @@ def ensure_insight_schema(worksheet, metadata):
             [
                 padded[0],
                 thread_id,
+                post.get("posted_at", ""),
                 post.get("date", ""),
                 post.get("time_slot", ""),
                 post.get("text", ""),
@@ -145,7 +151,7 @@ def ensure_insight_schema(worksheet, metadata):
 
     worksheet.clear()
     worksheet.update(migrated, "A1", value_input_option="USER_ENTERED")
-    logger.info(f"インサイト旧スキーマを12列へ移行: {len(migrated) - 1}行")
+    logger.info(f"インサイト旧スキーマを13列へ移行: {len(migrated) - 1}行")
 
 
 def run_insights():
@@ -183,6 +189,7 @@ def run_insights():
         row = [
             now,
             thread_id,
+            post.get("posted_at", ""),
             post.get("date", ""),
             post.get("time_slot", ""),
             post.get("text", ""),
