@@ -35,3 +35,7 @@ jobs:
         run: python scripts/register_kotoba_week_20260815.py
         env:
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+      - name: Add occasional context replies and wording fixes
+        run: python scripts/update_kotoba_week_20260815_threads.py
+        env:
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
