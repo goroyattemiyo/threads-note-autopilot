@@ -1,4 +1,4 @@
-"""8/15-8/21 投稿の文面調整と、時々入れるツリー2投稿目を登録する。"""
+"""8/15-8/21 投稿へ、時々入れるツリー2投稿目を登録する。"""
 import os
 
 import gspread
@@ -22,44 +22,6 @@ QUEUE_HEADERS = [
     "ツリー投稿ID",
     "ツリーエラー",
 ]
-
-TEXT_UPDATES = {
-    "KTK-20260818-PM": """メッセージの返信が来ないと、
-
-「何か変なこと言ったかな」
-って考え始めることがあります。
-
-自分も普通にある。
-
-でも今わかってるのは、
-
-「まだ返事が来てない」
-
-それだけ。
-
-忙しいのかもしれないし、
-あとで返すつもりかもしれない。
-
-理由が分かる前に、
-答えまで作らないようにしたい。""",
-    "KTK-20260819-PM": """仕事でひとつミスすると、
-
-「今日ダメだったな」
-って思うことがあります。
-
-自分も普通にへこむ。
-
-でも、今日全部がダメだったわけじゃなくて、
-
-「確認をひとつ抜かした」
-
-という話。
-
-それなら直す場所もひとつ。
-
-今日はそこだけ覚えて、
-あとは家でごはん食べますw""",
-}
 
 THREAD_REPLIES = {
     "KTK-20260816-PM": """こういうことを考えるのは、
@@ -115,7 +77,6 @@ def main():
     updates = [
         {"range": "A1:K1", "values": [QUEUE_HEADERS]},
     ]
-    text_updated = 0
     thread_registered = 0
     cleared = 0
     skipped_posted = 0
@@ -130,12 +91,6 @@ def main():
             skipped_posted += 1
             continue
 
-        if neta_id in TEXT_UPDATES:
-            updates.append(
-                {"range": f"C{row_index}", "values": [[TEXT_UPDATES[neta_id]]]}
-            )
-            text_updated += 1
-
         reply_text = THREAD_REPLIES.get(neta_id, "")
         updates.append(
             {"range": f"I{row_index}:K{row_index}", "values": [[reply_text, "", ""]]}
@@ -147,7 +102,6 @@ def main():
 
     queue.batch_update(updates, value_input_option="USER_ENTERED")
 
-    print(f"text_updated={text_updated}")
     print(f"thread_registered={thread_registered}")
     print(f"thread_cleared={cleared}")
     print(f"skipped_posted={skipped_posted}")
