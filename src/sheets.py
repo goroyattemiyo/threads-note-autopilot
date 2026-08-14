@@ -45,7 +45,7 @@ class SheetManager:
 
         Returns:
             {"row": int, "date": str, "time_slot": str, "text": str,
-             "type": str, "neta_id": str} or None
+             "type": str, "neta_id": str, "thread_reply_text": str} or None
         """
         ws = self._get_worksheet(queue_sheet)
         records = ws.get_all_records()
@@ -70,6 +70,7 @@ class SheetManager:
                     "text": row_text,
                     "type": str(row.get("種別", "")),
                     "neta_id": str(row.get("ネタID", "")),
+                    "thread_reply_text": str(row.get("ツリー2投稿目", "")),
                 }
         return None
 
@@ -80,10 +81,21 @@ class SheetManager:
         ws.update_cell(row, 7, post_id)
 
     def mark_as_error(self, queue_sheet: str, row: int, error_msg: str):
-        """エラーを記録"""
+        """メイン投稿のエラーを記録"""
         ws = self._get_worksheet(queue_sheet)
         ws.update_cell(row, 6, "ERROR")
         ws.update_cell(row, 8, error_msg[:200])
+
+    def mark_thread_reply_posted(self, queue_sheet: str, row: int, reply_id: str):
+        """ツリー2投稿目の投稿IDを記録する。"""
+        ws = self._get_worksheet(queue_sheet)
+        ws.update_cell(row, 10, reply_id)
+        ws.update_cell(row, 11, "")
+
+    def mark_thread_reply_error(self, queue_sheet: str, row: int, error_msg: str):
+        """ツリー2投稿目だけ失敗した場合のエラーを記録する。"""
+        ws = self._get_worksheet(queue_sheet)
+        ws.update_cell(row, 11, error_msg[:200])
 
     def log_post(self, log_sheet: str, post_id: str, text: str,
                  post_type: str, status: str):
