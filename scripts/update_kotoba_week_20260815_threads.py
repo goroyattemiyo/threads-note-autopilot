@@ -110,9 +110,11 @@ def main():
 
     if queue.col_count < len(QUEUE_HEADERS):
         queue.resize(cols=len(QUEUE_HEADERS))
-    queue.update(values=[QUEUE_HEADERS], range_name="A1:K1")
 
     records = queue.get_all_records()
+    updates = [
+        {"range": "A1:K1", "values": [QUEUE_HEADERS]},
+    ]
     text_updated = 0
     thread_registered = 0
     cleared = 0
@@ -129,25 +131,27 @@ def main():
             continue
 
         if neta_id in TEXT_UPDATES:
-            queue.update_cell(row_index, 3, TEXT_UPDATES[neta_id])
+            updates.append(
+                {"range": f"C{row_index}", "values": [[TEXT_UPDATES[neta_id]]]}
+            )
             text_updated += 1
 
-        if neta_id in THREAD_REPLIES:
-            queue.update_cell(row_index, 9, THREAD_REPLIES[neta_id])
-            queue.update_cell(row_index, 10, "")
-            queue.update_cell(row_index, 11, "")
+        reply_text = THREAD_REPLIES.get(neta_id, "")
+        updates.append(
+            {"range": f"I{row_index}:K{row_index}", "values": [[reply_text, "", ""]]}
+        )
+        if reply_text:
             thread_registered += 1
         else:
-            # 今週は2件だけツリーを付ける。未投稿行だけ明示的に空欄へ。
-            queue.update_cell(row_index, 9, "")
-            queue.update_cell(row_index, 10, "")
-            queue.update_cell(row_index, 11, "")
             cleared += 1
+
+    queue.batch_update(updates, value_input_option="USER_ENTERED")
 
     print(f"text_updated={text_updated}")
     print(f"thread_registered={thread_registered}")
     print(f"thread_cleared={cleared}")
     print(f"skipped_posted={skipped_posted}")
+    print(f"batch_ranges={len(updates)}")
 
 
 if __name__ == "__main__":
