@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/register-kotoba-week-20260815.yml'
+      - 'scripts/update_kotoba_week_20260815_threads.py'
   workflow_dispatch:
 
 permissions:
