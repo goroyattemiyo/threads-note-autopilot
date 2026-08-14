@@ -65,6 +65,8 @@ def run_post(time_slot: str):
     post_id = result.get("id", "")
     print(f"投稿完了: {post_id}")
 
+    # メイン投稿が成功した時点で先に保存し、ツリー2投稿目の失敗で
+    # メイン投稿が重複しないようにする。
     sheets.mark_as_posted(QUEUE_SHEET, post_data["row"], post_id)
     sheets.log_post(
         LOG_SHEET,
@@ -73,6 +75,29 @@ def run_post(time_slot: str):
         post_data["type"],
         "success",
     )
+
+    thread_reply_text = post_data.get("thread_reply_text", "").strip()
+    if thread_reply_text:
+        print("ツリー2投稿目を投稿中...")
+        reply_result = api.post_text(thread_reply_text, reply_to_id=post_id)
+
+        if "error" in reply_result:
+            error_msg = str(reply_result["error"])[:200]
+            print(f"WARNING: ツリー2投稿目のみ失敗: {error_msg}")
+            sheets.mark_thread_reply_error(
+                QUEUE_SHEET,
+                post_data["row"],
+                error_msg,
+            )
+        else:
+            reply_id = reply_result.get("id", "")
+            sheets.mark_thread_reply_posted(
+                QUEUE_SHEET,
+                post_data["row"],
+                reply_id,
+            )
+            print(f"ツリー2投稿目完了: {reply_id}")
+
     print("Sheets 更新完了")
 
 
