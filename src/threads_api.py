@@ -44,14 +44,16 @@ class ThreadsAPI:
         print(f"ERROR: {self.MAX_RETRIES}回リトライ失敗: {last_error}")
         return {"error": str(last_error)}
 
-    def create_container(self, text: str) -> dict:
-        """テキスト投稿コンテナを作成"""
+    def create_container(self, text: str, reply_to_id: str | None = None) -> dict:
+        """テキスト投稿コンテナを作成。reply_to_id があれば返信として作成する。"""
         url = f"{self.BASE_URL}/{self.user_id}/threads"
         params = {
             "media_type": "TEXT",
             "text": text,
             "access_token": self.access_token,
         }
+        if reply_to_id:
+            params["reply_to_id"] = reply_to_id
         return self._request_with_retry("POST", url, data=params)
 
     def publish(self, creation_id: str) -> dict:
@@ -63,10 +65,11 @@ class ThreadsAPI:
         }
         return self._request_with_retry("POST", url, data=params)
 
-    def post_text(self, text: str) -> dict:
-        """テキスト投稿の一連フロー（コンテナ作成→公開）"""
-        print(f"  コンテナ作成中...")
-        container = self.create_container(text)
+    def post_text(self, text: str, reply_to_id: str | None = None) -> dict:
+        """テキスト投稿の一連フロー（コンテナ作成→公開）。"""
+        label = "返信コンテナ" if reply_to_id else "コンテナ"
+        print(f"  {label}作成中...")
+        container = self.create_container(text, reply_to_id=reply_to_id)
         if "error" in container:
             return container
 
