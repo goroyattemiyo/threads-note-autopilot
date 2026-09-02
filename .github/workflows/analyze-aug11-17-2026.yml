@@ -1,0 +1,45 @@
+name: Analyze Aug 11-17 Reactions 2026
+on:
+  push:
+    paths:
+      - '.github/workflows/analyze-aug11-17-2026.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  GCP_PROJECT_ID: project-23377501-df9e-4686-987
+  GCP_WIF_PROVIDER: projects/879005049988/locations/global/workloadIdentityPools/github-actions/providers/github-actions
+  GCP_SERVICE_ACCOUNT: kotoba-no-kyori-sheets@project-23377501-df9e-4686-987.iam.gserviceaccount.com
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ env.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Analyze reactions
+        run: python scripts/analyze_aug11_17_2026.py | tee /tmp/aug11-17-analysis.txt
+        env:
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+      - name: Save analysis output
+        run: |
+          cp /tmp/aug11-17-analysis.txt data/aug11_17_reactions_2026.txt
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add data/aug11_17_reactions_2026.json data/aug11_17_reactions_2026.txt
+          git commit -m 'chore: record Aug 11-17 reaction analysis [skip ci]' || true
+          git push
