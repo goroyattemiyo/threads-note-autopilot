@@ -1,7 +1,6 @@
 name: Evening Post (JST 20:07)
 on:
-  schedule:
-    - cron: '7 11 * * *'
+  # Scheduled execution paused to avoid unused Actions minutes.
   workflow_dispatch:
 
 permissions:
