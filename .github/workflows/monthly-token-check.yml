@@ -1,7 +1,6 @@
 name: Monthly Token Check (1st JST 9:00)
 on:
-  schedule:
-    - cron: '0 0 1 * *'
+  # Scheduled execution paused to avoid unused Actions minutes.
   workflow_dispatch:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
