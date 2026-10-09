@@ -1,7 +1,6 @@
 name: Morning Post (JST 7:07)
 on:
-  schedule:
-    - cron: '7 22 * * *'
+  # Scheduled execution paused to avoid unused Actions minutes.
   workflow_dispatch:
 
 permissions:
